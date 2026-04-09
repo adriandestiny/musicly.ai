@@ -61,6 +61,8 @@ export default function SongForge({ onSongGenerated, onGenerationStart, onGenera
   const [format, setFormat] = useState<'mp3' | 'wav' | 'pcm'>('mp3');
   const [outputFormat, setOutputFormat] = useState<'url' | 'hex'>('url');
   const [stream, setStream] = useState(false);
+  const [voiceId, setVoiceId] = useState('');
+  const [instrumentalId, setInstrumentalId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -164,6 +166,8 @@ export default function SongForge({ onSongGenerated, onGenerationStart, onGenera
       audioFormat: format,
       outputFormat,
       stream,
+      voiceId: voiceId || undefined,
+      instrumentalId: instrumentalId || undefined,
     };
 
     const headers: Record<string, string> = {
@@ -353,6 +357,36 @@ export default function SongForge({ onSongGenerated, onGenerationStart, onGenera
           <p className="text-xs text-gray-500">
             Language hint: English and Mandarin are best supported
           </p>
+
+          {!instrumental && (
+            <div>
+              <label htmlFor="voiceId" className="block text-sm font-medium text-gray-300 mb-2">
+                Voice Reference (voice_id)
+              </label>
+              <input
+                type="text"
+                id="voiceId"
+                value={voiceId}
+                onChange={(e) => setVoiceId(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Enter voice reference ID..."
+              />
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="instrumentalId" className="block text-sm font-medium text-gray-300 mb-2">
+              Instrumental Reference (instrumental_id)
+            </label>
+            <input
+              type="text"
+              id="instrumentalId"
+              value={instrumentalId}
+              onChange={(e) => setInstrumentalId(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Enter instrumental reference ID..."
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
