@@ -8,15 +8,24 @@ generator client {
 }
 
 model Song {
-  id           String   @id @default(cuid())
-  prompt       String
-  lyrics       String?
-  instrumental Boolean  @default(true)
-  autoLyrics   Boolean  @default(false)
-  model        String   @default("music-2.5+")
-  audioUrl     String?
-  status       String   @default("pending")
-  errorMessage String?
-  rawResponse  String?
-  createdAt    DateTime @default(now())
+  id              String   @id @default(cuid())
+  prompt          String
+  lyrics          String?
+  instrumental    Boolean  @default(true)
+  autoLyrics      Boolean  @default(false)
+  model           String   @default("music-2.5+")
+  audioUrl        String?
+  status          String   @default("pending")
+  errorMessage    String?
+  rawResponse     String?
+  sampleRate      Int      @default(44100)
+  bitrate         Int      @default(256000)
+  audioFormat     String   @default("mp3")
+  outputFormat    String   @default("url")
+  lyricsOptimizer Boolean  @default(false)
+  stream          Boolean  @default(false)
+  duration        Float?
+  voiceId         String?
+  instrumentalId  String?
+  createdAt       DateTime @default(now())
 }

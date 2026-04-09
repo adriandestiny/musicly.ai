@@ -51,15 +51,15 @@ export default function SongForge({ onSongGenerated, onGenerationStart, onGenera
   const [testingConnection, setTestingConnection] = useState(false);
 
   const [prompt, setPrompt] = useState('A dreamy ambient track with soft synths and gentle percussion');
-  const [model, setModel] = useState('music-2.5+');
+  const [model, setModel] = useState<'music-2.5+' | 'music-2.5' | 'music-2.0'>('music-2.5+');
   const [instrumental, setInstrumental] = useState(true);
   const [autoLyrics, setAutoLyrics] = useState(false);
   const [lyrics, setLyrics] = useState('');
   const [lyricsOptimizer, setLyricsOptimizer] = useState(false);
   const [sampleRate, setSampleRate] = useState(44100);
   const [bitrate, setBitrate] = useState(256000);
-  const [format, setFormat] = useState('mp3');
-  const [outputFormat, setOutputFormat] = useState('url');
+  const [format, setFormat] = useState<'mp3' | 'wav' | 'pcm'>('mp3');
+  const [outputFormat, setOutputFormat] = useState<'url' | 'hex'>('url');
   const [stream, setStream] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -158,6 +158,12 @@ export default function SongForge({ onSongGenerated, onGenerationStart, onGenera
       instrumental,
       autoLyrics,
       lyrics: lyrics || undefined,
+      lyricsOptimizer,
+      sampleRate,
+      bitrate,
+      audioFormat: format,
+      outputFormat,
+      stream,
     };
 
     const headers: Record<string, string> = {
@@ -216,7 +222,7 @@ export default function SongForge({ onSongGenerated, onGenerationStart, onGenera
           <select
             id="model"
             value={model}
-            onChange={(e) => setModel(e.target.value)}
+            onChange={(e) => setModel(e.target.value as 'music-2.5+' | 'music-2.5' | 'music-2.0')}
             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           >
             {MODELS.map((m) => (
@@ -393,7 +399,7 @@ export default function SongForge({ onSongGenerated, onGenerationStart, onGenera
             <select
               id="format"
               value={format}
-              onChange={(e) => setFormat(e.target.value)}
+              onChange={(e) => setFormat(e.target.value as 'mp3' | 'wav' | 'pcm')}
               className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               {FORMATS.map((f) => (
@@ -413,7 +419,7 @@ export default function SongForge({ onSongGenerated, onGenerationStart, onGenera
             <select
               id="outputFormat"
               value={outputFormat}
-              onChange={(e) => setOutputFormat(e.target.value)}
+              onChange={(e) => setOutputFormat(e.target.value as 'url' | 'hex')}
               className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               {OUTPUT_FORMATS.map((of) => (

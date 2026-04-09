@@ -28,7 +28,7 @@ export class MiniMaxError extends Error {
   }
 }
 
-export async function generateSong(data: SongFormData, clientApiKey?: string): Promise<{ audioUrl: string; rawResponse: string }> {
+export async function generateSong(data: SongFormData, clientApiKey?: string): Promise<{ audioUrl: string; rawResponse: string; duration?: number; sampleRate?: number; bitrate?: number }> {
   const apiKey = clientApiKey || process.env.MINIMAX_API_KEY;
 
   if (!apiKey) {
@@ -40,22 +40,34 @@ export async function generateSong(data: SongFormData, clientApiKey?: string): P
   const requestBody: Record<string, unknown> = {
     model: data.model,
     prompt: data.prompt,
-    output_format: 'url',
+    output_format: data.outputFormat,
     is_instrumental: isInstrumental,
+    stream: data.stream,
     audio_setting: {
-      sample_rate: 44100,
-      bitrate: 256000,
-      format: 'mp3',
+      sample_rate: data.sampleRate,
+      bitrate: data.bitrate,
+      format: data.audioFormat,
     },
   };
 
   if (!isInstrumental) {
-    if (data.autoLyrics) {
+    if (data.lyricsOptimizer) {
+      requestBody.lyrics_optimizer = true;
+      requestBody.lyrics = data.lyrics || '';
+    } else if (data.autoLyrics) {
       requestBody.lyrics_optimizer = true;
       requestBody.lyrics = data.lyrics || '';
     } else {
       requestBody.lyrics = data.lyrics || '';
     }
+  }
+
+  if (data.voiceId) {
+    requestBody.voice_id = data.voiceId;
+  }
+
+  if (data.instrumentalId) {
+    requestBody.instrumental_id = data.instrumentalId;
   }
 
   try {
@@ -113,6 +125,9 @@ export async function generateSong(data: SongFormData, clientApiKey?: string): P
       return {
         audioUrl: result.data.audio,
         rawResponse: JSON.stringify(result),
+        duration: result.extra_info?.music_duration,
+        sampleRate: result.extra_info?.music_sample_rate,
+        bitrate: result.extra_info?.bitrate,
       };
     }
 

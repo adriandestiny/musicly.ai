@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import SongForm from '@/components/song-form';
+import SongForge from '@/components/song-forge';
 import SongResult from '@/components/song-result';
 import { SongResponse } from '@/lib/validation';
 import Link from 'next/link';
@@ -32,7 +32,7 @@ export default function Home() {
             </span>
           </h1>
           <p className="text-lg text-gray-400">
-            Generate AI-powered music with your prompts
+            Generate AI-powered music with full control
           </p>
           <div className="mt-4">
             <Link 
@@ -45,7 +45,7 @@ export default function Home() {
         </div>
 
         <div className="space-y-8">
-          <SongForm 
+          <SongForge 
             onSongGenerated={handleSongGenerated}
             onGenerationStart={handleGenerationStart}
             onGenerationEnd={handleGenerationEnd}
