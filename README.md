@@ -143,6 +143,49 @@ npm run build
 npm start
 ```
 
+## Deployment
+
+### Deploy to Vercel (Recommended)
+
+[Vercel](https://vercel.com) is the easiest way to deploy Next.js applications.
+
+1. **Push your code to GitHub**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin https://github.com/your-username/minimax-song-forge.git
+   git push -u origin main
+   ```
+
+2. **Connect to Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Vercel will automatically detect Next.js and configure the build settings
+
+3. **Add Environment Variables**
+   - In your Vercel project dashboard, go to "Settings" → "Environment Variables"
+   - Add `MINIMAX_API_KEY` with your MiniMax API key
+   - The `DATABASE_URL` uses SQLite by default and is automatically configured
+
+4. **Deploy**
+   - Click "Deploy" - Vercel will build and deploy your application
+   - Your app will be available at `https://your-project.vercel.app`
+
+### Build and Deploy to Any Host
+
+```bash
+# Build the production bundle
+npm run build
+
+# The build output is in the .next/ directory
+# Start the production server
+npm start
+```
+
+For production deployments, you'll need to set the `MINIMAX_API_KEY` environment variable on your hosting provider.
+
 ## Database Schema
 
 The `Song` model stores generation history with the following fields:
