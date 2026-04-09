@@ -1,20 +1,28 @@
 import { SongFormData } from './validation';
 
-const MINIMAX_API_URL = 'https://api.minimax.chat/v1/text/chatcompletion_v2';
+const MINIMAX_API_URL = 'https://api.minimax.io/v1/music_generation';
 
-interface MiniMaxResponse {
-  id: string;
-  choices: Array<{
-    finish_reason: string;
-    messages: Array<{
-      role: string;
-      content: string;
-    }>;
-  }>;
+interface MiniMaxMusicResponse {
+  data?: {
+    audio?: string;
+    status: number;
+  };
+  base_resp?: {
+    status_code: number;
+    status_msg: string;
+  };
+  trace_id?: string;
+  extra_info?: {
+    music_duration?: number;
+    music_sample_rate?: number;
+    music_channel?: number;
+    bitrate?: number;
+    music_size?: number;
+  };
 }
 
 export class MiniMaxError extends Error {
-  constructor(message: string, public statusCode?: number) {
+  constructor(message: string, public statusCode?: number, public apiCode?: number) {
     super(message);
     this.name = 'MiniMaxError';
   }
@@ -22,44 +30,32 @@ export class MiniMaxError extends Error {
 
 export async function generateSong(data: SongFormData): Promise<{ audioUrl: string; rawResponse: string }> {
   const apiKey = process.env.MINIMAX_API_KEY;
-  
+
   if (!apiKey) {
     throw new MiniMaxError('MINIMAX_API_KEY is not configured');
   }
 
+  const isInstrumental = data.instrumental;
+
   const requestBody: Record<string, unknown> = {
     model: data.model,
-    messages: [
-      {
-        role: 'user',
-        content: data.prompt,
-      },
-    ],
+    prompt: data.prompt,
+    output_format: 'url',
+    is_instrumental: isInstrumental,
+    audio_setting: {
+      sample_rate: 44100,
+      bitrate: 256000,
+      format: 'mp3',
+    },
   };
 
-  if (!data.instrumental) {
-    requestBody.tools = [
-      {
-        type: 'function',
-        function: {
-          name: 'generate_music',
-          description: 'Generate music with lyrics or instrumental',
-          parameters: {
-            type: 'object',
-            properties: {
-              lyrics: {
-                type: 'string',
-                description: 'The lyrics for the song',
-              },
-              instrumental: {
-                type: 'boolean',
-                description: 'Whether the song should be instrumental',
-              },
-            },
-          },
-        },
-      },
-    ];
+  if (!isInstrumental) {
+    if (data.autoLyrics) {
+      requestBody.lyrics_optimizer = true;
+      requestBody.lyrics = data.lyrics || '';
+    } else {
+      requestBody.lyrics = data.lyrics || '';
+    }
   }
 
   try {
@@ -80,32 +76,65 @@ export async function generateSong(data: SongFormData): Promise<{ audioUrl: stri
       );
     }
 
-    const result: MiniMaxResponse = await response.json();
-    
-    const musicContent = result.choices?.[0]?.messages?.[1]?.content;
-    if (!musicContent) {
-      throw new MiniMaxError('No music generation response from MiniMax API');
+    const result: MiniMaxMusicResponse = await response.json();
+
+    if (result.base_resp) {
+      if (result.base_resp.status_code === 1004 || result.base_resp.status_code === 2049) {
+        throw new MiniMaxError(
+          'Invalid API key. Please check your MINIMAX_API_KEY',
+          response.status,
+          result.base_resp.status_code
+        );
+      }
+      if (result.base_resp.status_code === 1002) {
+        throw new MiniMaxError(
+          'Rate limit exceeded. Please try again later.',
+          response.status,
+          result.base_resp.status_code
+        );
+      }
+      if (result.base_resp.status_code === 1008) {
+        throw new MiniMaxError(
+          'Insufficient balance. Please add credits to your MiniMax account.',
+          response.status,
+          result.base_resp.status_code
+        );
+      }
+      if (result.base_resp.status_code !== 0) {
+        throw new MiniMaxError(
+          `MiniMax API error: ${result.base_resp.status_msg || result.base_resp.status_code}`,
+          response.status,
+          result.base_resp.status_code
+        );
+      }
     }
 
-    let parsedResponse;
-    try {
-      parsedResponse = JSON.parse(musicContent);
-    } catch {
-      parsedResponse = { audio_url: musicContent };
+    if (result.data?.status === 2 && result.data.audio) {
+      return {
+        audioUrl: result.data.audio,
+        rawResponse: JSON.stringify(result),
+      };
     }
 
-    const audioUrl = parsedResponse.audio_url || parsedResponse.audioUrl || musicContent;
-
-    return {
-      audioUrl,
-      rawResponse: JSON.stringify(result),
-    };
+    throw new MiniMaxError('No audio data in MiniMax API response');
   } catch (error) {
     if (error instanceof MiniMaxError) {
       throw error;
     }
-    throw new MiniMaxError(
-      `Failed to call MiniMax API: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    if (error instanceof Error) {
+      if (error.message.includes('fetch')) {
+        throw new MiniMaxError(
+          'Failed to connect to MiniMax API. Please check your network connection.',
+          undefined,
+          undefined
+        );
+      }
+      throw new MiniMaxError(
+        `Failed to call MiniMax API: ${error.message}`,
+        undefined,
+        undefined
+      );
+    }
+    throw new MiniMaxError('Unknown error occurred while calling MiniMax API');
   }
 }
