@@ -6,6 +6,7 @@ import { generateSong, MiniMaxError } from '@/lib/minimax';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const apiKeyFromHeader = request.headers.get('X-MINIMAX-API-KEY') || undefined;
     
     const validationResult = songFormSchema.safeParse(body);
     if (!validationResult.success) {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      const result = await generateSong(data);
+      const result = await generateSong(data, apiKeyFromHeader);
 
       const updatedSong = await prisma.song.update({
         where: { id: song.id },

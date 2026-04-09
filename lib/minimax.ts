@@ -28,8 +28,8 @@ export class MiniMaxError extends Error {
   }
 }
 
-export async function generateSong(data: SongFormData): Promise<{ audioUrl: string; rawResponse: string }> {
-  const apiKey = process.env.MINIMAX_API_KEY;
+export async function generateSong(data: SongFormData, clientApiKey?: string): Promise<{ audioUrl: string; rawResponse: string }> {
+  const apiKey = clientApiKey || process.env.MINIMAX_API_KEY;
 
   if (!apiKey) {
     throw new MiniMaxError('MINIMAX_API_KEY is not configured');
